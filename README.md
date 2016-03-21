@@ -11,7 +11,9 @@ Mitchell Wortsman, Justin Young, Ruobing Xia and Shaobo Guan
 
 # Structure of project folder
 README.md
+
 DATA/: data in .csv format
+
 learn_phrase: learn multi-word phase from words
 
 # Data source
