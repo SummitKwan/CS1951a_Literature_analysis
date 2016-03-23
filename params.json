@@ -1,0 +1,6 @@
+{
+  "name": "Cs1951a sfn abstract analysis",
+  "tagline": "final project for CS1951a Data Science Course",
+  "body": "# CS1951a_SfN_abstract_analysis\r\n\r\nfinal project for CS1951a Data Science Course, Spring 2016, Brown University\r\n\r\nCourse website: http://cs.brown.edu/courses/csci1951-a/assignments.shtml\r\n\r\n# Authors\r\nMitchell Wortsman, Justin Young, Ruobing Xia and Shaobo Guan\r\n\r\n# Goal\r\n\r\n# Structure of project folder\r\nREADME.md\r\n\r\nDATA/: data in .csv format\r\n\r\nlearn_phrase: learn multi-word phase from words\r\n\r\n# Data source\r\nData is collected using javascript from publicly available SfN online abstract archive: http://www.abstractsonline.com/plan/start.aspx?mkey={D0FF4555-8574-4FBB-B9D4-04EEC8BA0C84}\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
