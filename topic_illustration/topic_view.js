@@ -1,9 +1,16 @@
 var width = 960,
-    height = 960,  // height of the sunburst plot
-    edge_sunburst = 50,
-    radius = (Math.min(width, height) / 2) - edge_sunburst;
-var height_wc = 480,  // heigh of wordcloud
-    height_fig= height + height_wc;
+    height_title = 30,
+    width_nav = 800,
+    height_nav = 80,
+    height_sunburst = 800,  // height of the sunburst plot
+    radius = (Math.min(width, height_sunburst) / 2),
+    height_panel1 = height_title + height_nav + height_sunburst + 50,
+    height_title_wc = 30,
+    height_nav_wc = 80,
+    height_wc = 480,  // heigh of wordcloud
+    height_panel2 = height_title_wc + height_nav_wc + height_wc,
+    height_fig = height_panel1 + height_panel2
+    ;
 
 var formatNumber = d3.format(",d");
 
@@ -34,9 +41,37 @@ var svg = d3.select("#topic_view").append("svg")
 svg.append('text')
 .text('SfN 2016 conference abstracts by topic')
 .attr("x",width/2)
-.attr("y",30)
+.attr("y",height_title)
 .style("font-size", "24px")
 .attr("text-anchor", "middle");
+
+svg.append('text')
+.text('Abstract Word Cloud by topic')
+.attr("x",width/2)
+.attr("y",height_panel1 + height_title_wc)
+.style("font-size", "24px")
+.attr("text-anchor", "middle");
+
+
+// add navigation bar
+var nav = svg.append('foreignObject')
+.attr('id', 'nav')
+.attr("text-anchor", "middle")
+.attr('x', (width-width_nav)/2 )
+.attr('y', height_title)
+.attr('width', width_nav)
+.attr('height', height_nav)
+;
+
+// add navigation bar for wordcloud
+var nav_wc = svg.append('foreignObject')
+.attr('id', 'nav')
+.attr("text-anchor", "middle")
+.attr('x', (width-width_nav)/2 )
+.attr('y', height_panel1)
+.attr('width', width_nav)
+.attr('height', height_nav)
+;
 
 d3.json("topic_tree.json", function(error, root) {
     if (error) throw error;
@@ -53,7 +88,7 @@ d3.json("topic_tree.json", function(error, root) {
             d.hue = (d.x+d.dx/2)/d.parent.dx*360;}
         else {  // take the diff from parent, normalized, scaled (1/5), and add parent value
             d.hue = ( (d.x+d.dx/2-d.parent.x-d.parent.dx/2)/d.parent.dx*360)/5+d.parent.hue ;}
-        d.color = d.name=='root' ? '#ffffff' : d3.hsl( d.hue, d.saturation, 0.5);
+        d.color = d.name=='root' ? '#ffffff' : d3.hsl( d.hue, d.saturation, 0.6);
     })
 
     // if output partition object to console
@@ -61,10 +96,10 @@ d3.json("topic_tree.json", function(error, root) {
 
     var g = svg.append('g')
     .attr('id','sunburst')
+    .attr("transform", "translate(" + width / 2 + "," + ( height_title + height_nav +  height_sunburst/2) + ")")
     .selectAll("g")
     .data(data_partition)
-    .enter().append("g")
-    .attr("transform", "translate(" + width / 2 + "," + (height / 2) + ")");
+    .enter().append("g");
 
     var path = g.append("path")
     .attr("d", arc)
@@ -73,30 +108,32 @@ d3.json("topic_tree.json", function(error, root) {
     .append("title")
     .text(function(d) { return d.name + "\ncount=" + formatNumber(d.value); });
 
-    var text = g.append("text")
+    // Add label on every arc
+    // use "foreignObject" and html to achieve text-wrap
+    var arc_label = g.append("foreignObject")
     .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-    .attr('text_width', function(d){ return (y(d.y+d.dy)-y(d.y))*0.9; })
-    .attr('text_height', function(d){ return (x(d.x+d.dx)-x(d.x))*0.9; })
+    .attr('width', function(d){ return (y(d.y+d.dy)-y(d.y))*0.9; })
+    .attr('height', function(d){
+        d.text_height = (x(d.x+d.dx)-x(d.x))*0.9*y(d.y);
+        return d.text_height; })
     .attr("x", function(d) { return y(d.y+d.dy*0.05); })
-    .attr('id', 'arc_label')
-    .text(function(d) { return d.dx>5/360 & d.name != 'root' ? d.name : null; })
+    .attr('y', function(d) { return -0.5*d.text_height; })
+    .attr('class', 'arc_label')
+    // use html <div> component to to show text with wrap and vertical-alingned
+    .html(function(d) {
+        return d.dx>5/360 & d.name != 'root'
+        ? '<div><div class="arc_label_text">'+d.name+'</div></div>'
+        : '<div><div class="arc_label_text">'+'</div></div>'; })
+    // use two <div> as table format to achieve vertical-align
     .style('font-size', '11px')
-    .call(text_wrap);
-
-    // g.append("foreignObject")
-    // .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-    // .attr('width', function(d){ return (y(d.y+d.dy)-y(d.y))*0.9; })
-    // .attr('height', function(d){ return (x(d.x+d.dx)-x(d.x))*0.9*y(d.y); })
-    // .attr("x", function(d) { return y(d.y+d.dy*0.05); })
-    // .attr('id', 'arc_label')
-    // .html(function(d) { return d.dx>5/360 & d.name != 'root' ? '<div>'+d.name+'</div>' : null; })
-    // // .style("display",'table-cell' )
-    // // .style('vertical-align', 'middle') // not working
-    // .style('font-size', '11px');
-
-    g.selectAll('#arc_label').selectAll('div')
-    .style('display','table-cell')
-    .style('vertical-align','middle');
+    .select('div')
+    .style('display', 'table')
+    .select('div')
+    .style('display', 'table-cell')
+    .style('height', function(d){return d.text_height+'px';})
+    .style('vertical-align', 'middle')
+    // .style('border','1px solid black')
+    ;
 
     // mouse trigger
     g
@@ -105,14 +142,52 @@ d3.json("topic_tree.json", function(error, root) {
     .on("click", click)  // mouse click call back
     .on("dblclick", dblclick)  // mouse click call back
 
+    // ++++++++++ navigation bar ++++++++++
+    var depth_max = Math.max(...data_partition.map(function(d){return d.depth;}));
+    nav.html('<table>'+ '<td></td>'.repeat(depth_max) +'</table>')
+    .select('table')
+    .attr('id','nav_table')
+    .attr('width' ,width_nav)
+    .attr('height',height_nav)
+    .selectAll('td')
+    .attr('width',width_nav/depth_max)
+    .attr('bgcolor','AliceBlue')
+    .style('border','1px solid silver')
+    ;
+
+    nav_wc.html('<table>'+ '<td></td>'.repeat(depth_max) +'</table>')
+    .select('table')
+    .attr('id','nav_table')
+    .attr('width' ,width_nav)
+    .attr('height',height_nav)
+    .selectAll('td')
+    .attr('width',width_nav/depth_max)
+    .attr('bgcolor','AliceBlue')
+    .style('border','1px solid silver')
+    ;
+
+    // ++++++++++ mouse interaction ++++++++++
     function click(d) {
-        labelHirch = getLabelHierarchy(d);
-        current_label.html( labelHirch.join('</br>') );
+        // update navigation bar for wc
+        var object_hirch = getLabelHierarchy(d);  // get label text
+        var td_all = nav_wc.selectAll('table').selectAll('td')[0];  // get nav bar table cells
+        // update table cells
+        for (i=0; i<td_all.length; i++){
+            if (i<object_hirch.length){ // from root to current level
+                td_all[i].innerText = object_hirch[i].name;
+                // td_all[i].attr('bgcolor', 'blue');
+                td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.9) );
+            }
+            else {
+                td_all[i].innerText = null;
+                td_all[i].bgColor = 'Snow';
+            }
+        }
     }
 
     // mouse click function
     function dblclick(d) {
-        g.selectAll('#arc_label').attr("opacity", 0);
+        g.selectAll('.arc_label').attr("opacity", 0);
 
         click_tran = svg.transition()
         .duration(750)
@@ -120,36 +195,69 @@ d3.json("topic_tree.json", function(error, root) {
         .attrTween("d", arcTween(d))
         .each("end", function(e, i) {
             // get a selection of the associated text element
-            var arcText = d3.select(this.parentNode).select("text");
-            // fade in the text element and recalculate positions
+            var arcText = d3.select(this.parentNode).select("foreignObject");
+            // recalculate positions
             arcText
             .attr("transform", function() { return "rotate(" + computeTextRotation(e) + ")" })
-            .attr('text_width', function(){ return (y(e.y+e.dy)-y(e.y))*0.9; })
-            .attr('text_height', function(){ return (x(e.x+e.dx)-x(e.x))*0.9; })
-            .attr("x", function() { return y(e.y+e.dy*0.05); })
+            .attr('width', function(e){ return (y(e.y+e.dy)-y(e.y))*0.9; })
+            .attr('height', function(e){
+                e.text_height = (x(e.x+e.dx)-x(e.x))*0.9*y(e.y);
+                return e.text_height; })
+            .attr("x", function(e) { return y(e.y+e.dy*0.05); })
+            .attr('y', function(e) { return -0.5*e.text_height; })
             ;
 
-            arcText.transition().duration(200).attr("opacity", 1);
+            // update the html text
+            arcText.select('div').select('div')
+            .style('height', function(e){return e.text_height+'px';})
+            [0][0].innerText = (  // [0][0] to select from array
+                (e.x>=d.x & e.x<(d.x+d.dx) & (x(e.x+e.dx)-x(e.x))/Math.PI*180>5
+                & e.name != 'root')
+                ? e.name
+                : null );
 
-            // check if the animated element's data e lies within the visible angle span given in d
-            if (e.x >= d.x && e.x < (d.x + d.dx)) {
-                arcText.text(function(e) { return (x(e.x+e.dx)-x(e.x))/Math.PI*180>5 & e.name != 'root' ? e.name : null; });
-                text_wrap(arcText);
+            arcText.attr("opacity", 1);;
+
+        })
+    }
+
+    //
+    function mouseOverArc(d) {
+        // update arc
+    	d3.select(this).attr("stroke-width","4");
+        d3.select(this).select('path')
+        .style('fill',function(d){return d3.hsl( d.hue, d.saturation, 0.8)});
+
+        // update navigation bar
+        var object_hirch = getLabelHierarchy(d);  // get label text
+        var td_all = nav.selectAll('table').selectAll('td')[0];  // get nav bar table cells
+        // update table cells
+        for (i=0; i<td_all.length; i++){
+            if (i<object_hirch.length){
+                td_all[i].innerText = object_hirch[i].name;
+                // td_all[i].attr('bgcolor', 'blue');
+                td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.90) );
             }
             else {
-                arcText.text( null );
+                td_all[i].innerText = null;
+                td_all[i].bgColor = 'Snow';
             }
-        })
+        }
+    }
+    function mouseOutArc(d) {
+    	d3.select(this).attr("stroke-width","1");
+        d3.select(this).select('path')
+        .style('fill', function(d){return d.color;} );
     }
 
     // ++++++++++ topic tree ++++++++++
     svg.append('g')
     .attr('id','label_tree')
-    .attr('transform', "translate(" + 0 + "," + edge_sunburst + ")");
+    .attr('transform', "translate(" + 0 + "," + height_title + ")");
 
     svg.append('g')
     .attr('id','label_tree')
-    .attr('transform', "translate(" + 0 + "," + height + ")");
+    .attr('transform', "translate(" + 0 + "," + (height_title+height_nav+height_sunburst) + ")");
 
     // use forign object to add html text with multiple lines
     var current_label = svg.selectAll('#label_tree').append('foreignObject')
@@ -177,55 +285,17 @@ function computeTextRotation(d) {
     return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
 }
 
-// text wrap for labels, from https://bl.ocks.org/mbostock/7555321
-function text_wrap(text) {
-  text.each(function() {
-    var text = d3.select(this),
-        words = text.text().split(/\s+/).reverse(),
-        word,
-        line = [],
-        lineNumber = 0,
-        lineHeight = 1.1, // ems
-        text_width = text.attr("text_width"),
-        text_height = text.attr("text_height"),
-        x = text.attr("x"),
-        y = text.attr("y"),
-        tspan = text.text(null).append("tspan");
-    while (word = words.pop()) {
-      line.push(word);
-      tspan.text(line.join(" "));
-      if (tspan.node().getComputedTextLength() > text_width) {
-        line.pop();
-        tspan.text(line.join(" "));
-        line = [word];
-        if (lineNumber * lineHeight < text_height/2 ){  // to prevent the text from going out of the arc
-            tspan = text.append("tspan").attr("x", x).attr("y", ++lineNumber * lineHeight + "em").text(word);
-        }
-      }
-    }
-  });
-}
-
-//
-function mouseOverArc() {
-	d3.select(this).attr("stroke-width","4");
-    d3.select(this).select('path')
-    .style('fill',function(d){return d3.hsl( d.hue, d.saturation, 0.8)});
-}
-function mouseOutArc() {
-	d3.select(this).attr("stroke-width","1");
-    d3.select(this).select('path')
-    .style('fill', function(d){return d.color;} );
-}
 
 function getLabelHierarchy(d) {
     label_hirch = [];
     hue_hirch = [];
+    object_hirch = [];
     c = d;
     while (c.name != 'root'){
         label_hirch.push(c.name);
         hue_hirch.push(c.hue);
+        object_hirch.push(c)
         c = c.parent;
     }
-    return label_hirch.reverse();
+    return object_hirch.reverse();
 }
