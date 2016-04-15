@@ -32,23 +32,27 @@ l_topicS = sorted(data.topicS.unique());
 
 
 # ############### create word cloud  ###############
+fontpath = '/Library/Fonts/Microsoft/Impact'
 all_text = '\n'.join(data.abstract)  # join all abstract together
-cloud = WordCloud(width=1024, height=768, ranks_only=True, background_color='white').generate(all_text)  # generate world could
+cloud = WordCloud(font_path=fontpath, width=960, height=768, ranks_only=True, background_color='white', max_font_size=128, min_font_size=24).generate(all_text)  # generate world could
 
-name_file = os.path.join ( current_filepath, 'word_cloud_'+'all'+'.png' )
-cloud.to_file(name_file)
+if False:
 
-text_topicS = dict();
-# for every topic:
-for topicS in l_topicS:
-    if topicS is not np.nan:
-        text_topicS[topicS] = '\n'.join(data.abstract[data.topicS==topicS])
-        cloud_cur = WordCloud(width=1024, height=768, ranks_only=True, background_color='white').generate(text_topicS[topicS])
-        name_file = os.path.join ( current_filepath, 'word_cloud_topic_'+topicS+'.png' )
-        cloud_cur.to_file(name_file)
+    name_file = os.path.join ( current_filepath, 'word_cloud_'+'all'+'.png' )
+    cloud.to_file(name_file)
+
+    text_topicS = dict();
+    # for every topic:
+    for topicS in l_topicS:
+        if topicS is not np.nan:
+            text_topicS[topicS] = '\n'.join(data.abstract[data.topicS==topicS])
+            cloud_cur = WordCloud(width=1024, height=768, ranks_only=True, background_color='white').generate(text_topicS[topicS])
+            name_file = os.path.join ( current_filepath, 'word_cloud_topic_'+topicS+'.png' )
+            cloud_cur.to_file(name_file)
+
 
 plt.figure()
-plt.imshow(wordcloud)
+plt.imshow(cloud)
 plt.axis("off")
 
 

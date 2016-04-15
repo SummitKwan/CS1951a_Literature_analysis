@@ -106,7 +106,7 @@ d3.json("topic_tree.json", function(error, root) {
     .style("fill", function(d){return d.color;})
     .style("stroke", "#fff")
     .append("title")
-    .text(function(d) { return d.name + "\ncount=" + formatNumber(d.value); });
+    .text(function(d) { return d.fullname + "\ncount=" + formatNumber(d.value); });
 
     // Add label on every arc
     // use "foreignObject" and html to achieve text-wrap
@@ -122,7 +122,7 @@ d3.json("topic_tree.json", function(error, root) {
     // use html <div> component to to show text with wrap and vertical-alingned
     .html(function(d) {
         return d.dx>5/360 & d.name != 'root'
-        ? '<div><div class="arc_label_text">'+d.name+'</div></div>'
+        ? '<div><div class="arc_label_text">'+d.fullname+'</div></div>'
         : '<div><div class="arc_label_text">'+'</div></div>'; })
     // use two <div> as table format to achieve vertical-align
     .style('font-size', '11px')
@@ -174,7 +174,7 @@ d3.json("topic_tree.json", function(error, root) {
         // update table cells
         for (i=0; i<td_all.length; i++){
             if (i<object_hirch.length){ // from root to current level
-                td_all[i].innerText = object_hirch[i].name;
+                td_all[i].innerText = object_hirch[i].fullname;
                 // td_all[i].attr('bgcolor', 'blue');
                 td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.9) );
             }
@@ -234,7 +234,7 @@ d3.json("topic_tree.json", function(error, root) {
         // update table cells
         for (i=0; i<td_all.length; i++){
             if (i<object_hirch.length){
-                td_all[i].innerText = object_hirch[i].name;
+                td_all[i].innerText = object_hirch[i].fullname;
                 // td_all[i].attr('bgcolor', 'blue');
                 td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.90) );
             }
@@ -292,7 +292,7 @@ function getLabelHierarchy(d) {
     object_hirch = [];
     c = d;
     while (c.name != 'root'){
-        label_hirch.push(c.name);
+        label_hirch.push(c.fullname);
         hue_hirch.push(c.hue);
         object_hirch.push(c)
         c = c.parent;
