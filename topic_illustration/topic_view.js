@@ -1,14 +1,24 @@
 var width = 960,
-    height_title = 30,
+    height_title = 40,
+    height_title2nav = 10,
+    y_nav = height_title + height_title2nav
     width_nav = 800,
     height_nav = 80,
+    height_nav2sunburst = 10,
+    y_sunbust = y_nav + height_nav + height_nav2sunburst,
     height_sunburst = 800,  // height of the sunburst plot
     radius = (Math.min(width, height_sunburst) / 2),
-    height_panel1 = height_title + height_nav + height_sunburst + 50,
-    height_title_wc = 30,
+    height_panel1 = y_sunbust + height_sunburst + 50,
+
+    height_title_wc = 20,
+    y_title_wc = height_panel1,
+    y_nav_wc = y_title_wc + height_title_wc + height_title2nav,
     height_nav_wc = 80,
-    height_wc = 480,  // heigh of wordcloud
-    height_panel2 = height_title_wc + height_nav_wc + height_wc,
+    height_nav2cloud = 10,
+    y_cloud = y_nav_wc + height_nav_wc + height_nav2cloud,
+    width_cloud = width*0.9,
+    height_cloud = 480,  // heigh of wordcloud
+    height_panel2 = y_cloud+ height_cloud,
     height_fig = height_panel1 + height_panel2
     ;
 
@@ -45,32 +55,45 @@ svg.append('text')
 .style("font-size", "24px")
 .attr("text-anchor", "middle");
 
-svg.append('text')
-.text('Abstract Word Cloud by topic')
-.attr("x",width/2)
-.attr("y",height_panel1 + height_title_wc)
-.style("font-size", "24px")
-.attr("text-anchor", "middle");
-
-
 // add navigation bar
 var nav = svg.append('foreignObject')
 .attr('id', 'nav')
 .attr("text-anchor", "middle")
 .attr('x', (width-width_nav)/2 )
-.attr('y', height_title)
+.attr('y', y_nav)
 .attr('width', width_nav)
 .attr('height', height_nav)
 ;
+
+// add title text to word cloud
+svg.append('text')
+.text('Abstract Word Cloud by topic')
+.attr("x",width/2)
+.attr("y",y_title_wc)
+.style("font-size", "24px")
+.attr("text-anchor", "middle");
 
 // add navigation bar for wordcloud
 var nav_wc = svg.append('foreignObject')
 .attr('id', 'nav')
 .attr("text-anchor", "middle")
 .attr('x', (width-width_nav)/2 )
-.attr('y', height_panel1)
+.attr('y', y_nav_wc)
 .attr('width', width_nav)
 .attr('height', height_nav)
+;
+
+var cloud = svg.append('foreignObject')
+.attr("text-anchor", "middle")
+.attr('x', (width - width_cloud)/2 )
+.attr('y', y_cloud)
+.attr('width', width_cloud)
+.attr('height', height_cloud)
+.html('<img src=' + 'WC_PNG/root.png' + '>')
+.select('img')
+.attr('id', 'cloud')
+.style('align','middle')
+.style('width', width_cloud+'px')
 ;
 
 d3.json("topic_tree.json", function(error, root) {
@@ -88,7 +111,7 @@ d3.json("topic_tree.json", function(error, root) {
             d.hue = (d.x+d.dx/2)/d.parent.dx*360;}
         else {  // take the diff from parent, normalized, scaled (1/5), and add parent value
             d.hue = ( (d.x+d.dx/2-d.parent.x-d.parent.dx/2)/d.parent.dx*360)/5+d.parent.hue ;}
-        d.color = d.name=='root' ? '#ffffff' : d3.hsl( d.hue, d.saturation, 0.6);
+        d.color = d.name=='root' ? d3.hsl( d.hue, d.saturation, 1.0) : d3.hsl( d.hue, d.saturation, 0.6);
     })
 
     // if output partition object to console
@@ -96,7 +119,7 @@ d3.json("topic_tree.json", function(error, root) {
 
     var g = svg.append('g')
     .attr('id','sunburst')
-    .attr("transform", "translate(" + width / 2 + "," + ( height_title + height_nav +  height_sunburst/2) + ")")
+    .attr("transform", "translate(" + width / 2 + "," + ( y_sunbust +  height_sunburst/2) + ")")
     .selectAll("g")
     .data(data_partition)
     .enter().append("g");
@@ -183,6 +206,11 @@ d3.json("topic_tree.json", function(error, root) {
                 td_all[i].bgColor = 'Snow';
             }
         }
+
+        // update wordcloud
+        // svg.select('#cloud')
+        // .html('<img src=' + 'WC_PNG/' +d.name + '.png' + '>')
+        svg.select('#cloud')[0][0].src = 'WC_PNG/' +d.name + '.png';
     }
 
     // mouse click function
@@ -213,7 +241,7 @@ d3.json("topic_tree.json", function(error, root) {
             [0][0].innerText = (  // [0][0] to select from array
                 (e.x>=d.x & e.x<(d.x+d.dx) & (x(e.x+e.dx)-x(e.x))/Math.PI*180>5
                 & e.name != 'root')
-                ? e.name
+                ? e.fullname
                 : null );
 
             arcText.attr("opacity", 1);;
@@ -226,7 +254,7 @@ d3.json("topic_tree.json", function(error, root) {
         // update arc
     	d3.select(this).attr("stroke-width","4");
         d3.select(this).select('path')
-        .style('fill',function(d){return d3.hsl( d.hue, d.saturation, 0.8)});
+        .style('fill',function(d){return d.color.brighter(1)});
 
         // update navigation bar
         var object_hirch = getLabelHierarchy(d);  // get label text
