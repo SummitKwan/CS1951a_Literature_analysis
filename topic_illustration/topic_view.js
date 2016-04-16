@@ -49,7 +49,7 @@ var svg = d3.select("#topic_view").append("svg")
 
 // add title text to figure
 svg.append('text')
-.text('SfN 2016 conference abstracts by topic')
+.text('SfN 2015 conference abstracts by topic')
 .attr("x",width/2)
 .attr("y",height_title)
 .style("font-size", "24px")
@@ -63,6 +63,20 @@ var nav = svg.append('foreignObject')
 .attr('y', y_nav)
 .attr('width', width_nav)
 .attr('height', height_nav)
+;
+
+svg.append('foreignObject')
+.attr("text-anchor", "left")
+.attr('x', 0 )
+.attr('y', y_sunbust)
+.attr('width', radius/2)
+.attr('height', radius/3)
+.style('font-size','12px')
+.html('instructions:<ul>'
+    +'<li>move mouse over arch to read topic names</li>'
+    +'<li>single click on arch to view word cloud of this topic</li>'
+    +'<li>double click on arch to zoom in, on center to zoom out</li>'
+    +'</ul>')
 ;
 
 // add title text to word cloud
@@ -144,11 +158,11 @@ d3.json("topic_tree.json", function(error, root) {
     .attr('class', 'arc_label')
     // use html <div> component to to show text with wrap and vertical-alingned
     .html(function(d) {
-        return d.dx>5/360 & d.name != 'root'
+        return (x(d.x+d.dx)-x(d.x))/Math.PI*180>8 & d.name != 'root'
         ? '<div><div class="arc_label_text">'+d.fullname+'</div></div>'
         : '<div><div class="arc_label_text">'+'</div></div>'; })
     // use two <div> as table format to achieve vertical-align
-    .style('font-size', '11px')
+    .style('font-size', '14px')
     .select('div')
     .style('display', 'table')
     .select('div')
@@ -239,7 +253,7 @@ d3.json("topic_tree.json", function(error, root) {
             arcText.select('div').select('div')
             .style('height', function(e){return e.text_height+'px';})
             [0][0].innerText = (  // [0][0] to select from array
-                (e.x>=d.x & e.x<(d.x+d.dx) & (x(e.x+e.dx)-x(e.x))/Math.PI*180>5
+                (e.x>=d.x & e.x<(d.x+d.dx) & (x(e.x+e.dx)-x(e.x))/Math.PI*180>8
                 & e.name != 'root')
                 ? e.fullname
                 : null );
