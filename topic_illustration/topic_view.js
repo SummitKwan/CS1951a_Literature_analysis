@@ -1,3 +1,7 @@
+// todo:
+//   double click for touch device
+//   move wordcloud with mouse click
+
 var width = 960,
     height_title = 40,
     height_title2nav = 10,
@@ -45,7 +49,10 @@ var arc = d3.svg.arc()  // set up arc object
 // creat svg, append to html element
 var svg = d3.select("#topic_view").append("svg")
 .attr("width", width)
-.attr("height", height_fig);
+.attr("height", height_fig)
+.style('all','initial')
+.style('font-family','"Trebuchet MS", Helvetica, sans-serif')
+;
 
 // add title text to figure
 svg.append('text')
@@ -95,6 +102,7 @@ var nav_wc = svg.append('foreignObject')
 .attr('y', y_nav_wc)
 .attr('width', width_nav)
 .attr('height', height_nav)
+
 ;
 
 var cloud = svg.append('foreignObject')
@@ -188,7 +196,9 @@ d3.json("topic_tree.json", function(error, root) {
     .attr('height',height_nav)
     .selectAll('td')
     .attr('width',width_nav/depth_max)
-    .attr('bgcolor','AliceBlue')
+    .style('font-size', '18px')
+    .style('vertical-align', 'middle')
+    .style('background-color','AliceBlue')
     .style('border','1px solid silver')
     ;
 
@@ -199,7 +209,9 @@ d3.json("topic_tree.json", function(error, root) {
     .attr('height',height_nav)
     .selectAll('td')
     .attr('width',width_nav/depth_max)
-    .attr('bgcolor','AliceBlue')
+    .style('font-size', '18px')
+    .style('vertical-align', 'middle')
+    .style('background-color','AliceBlue')
     .style('border','1px solid silver')
     ;
 
@@ -213,11 +225,14 @@ d3.json("topic_tree.json", function(error, root) {
             if (i<object_hirch.length){ // from root to current level
                 td_all[i].innerText = object_hirch[i].fullname;
                 // td_all[i].attr('bgcolor', 'blue');
-                td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.9) );
+                if (i == object_hirch.length-1){
+                    td_all[i].style['background-color'] = object_hirch[i].color;}
+                else {
+                    td_all[i].style['background-color'] = object_hirch[i].color.brighter(1.0);}
             }
             else {
                 td_all[i].innerText = null;
-                td_all[i].bgColor = 'Snow';
+                td_all[i].style['background-color'] = 'Snow';
             }
         }
 
@@ -268,7 +283,7 @@ d3.json("topic_tree.json", function(error, root) {
         // update arc
     	d3.select(this).attr("stroke-width","4");
         d3.select(this).select('path')
-        .style('fill',function(d){return d.color.brighter(1)});
+        .style('fill',function(d){return d.color.brighter(0.5)});
 
         // update navigation bar
         var object_hirch = getLabelHierarchy(d);  // get label text
@@ -278,11 +293,11 @@ d3.json("topic_tree.json", function(error, root) {
             if (i<object_hirch.length){
                 td_all[i].innerText = object_hirch[i].fullname;
                 // td_all[i].attr('bgcolor', 'blue');
-                td_all[i].bgColor = d3.hsl( object_hirch[i].hue, object_hirch[i].saturation, (i==object_hirch.length-1 ? 0.6 : 0.90) );
+                td_all[i].style['background-color'] = object_hirch[i].color;
             }
             else {
                 td_all[i].innerText = null;
-                td_all[i].bgColor = 'Snow';
+                td_all[i].style['background-color'] = 'Snow';
             }
         }
     }
