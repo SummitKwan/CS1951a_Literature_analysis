@@ -1,95 +1,99 @@
-import csv
-import string
+import os
+import pandas as pd
 import re
 from operator import itemgetter
 from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
-from copy import copy 
 import argparse
 
+#from __future__ import print_function
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.decomposition import NMF, LatentDirichletAllocation
+from sklearn.datasets import fetch_20newsgroups
+
+n_features = 10000
+n_topics = 100
+n_top_words = 20
 colors = ['#ff0000', '#3399ff', '#ffff00','#99ff33', '#ff3399', '#00ffcc', '#ff9933', '#cc33ff', '#009933', '#3333cc']
     
-def load_file_NIPS(file_path):
-    with open(file_path, 'r') as file_reader:
-        reader = csv.reader(file_reader)
-        next(reader, None)
-        ID=[];Title=[];EventType=[];PdfName=[];Abstract=[];Paper=[];
-        for row in reader:
-            ID.append(row[0])
-            Title.append(row[1])
-            EventType.append(row[2])
-            PdfName.append(row[3])
-            Abstract.append(row[4])
-            Paper.append(row[5])
-    return(ID, Title, EventType, PdfName, Abstract, Paper)
-
-def get_word_list(array):
-    with open('./tools/stopwords.txt') as stopwords:
-        stops = list(stopwords.read().splitlines())
-    new_array = [[]]*len(array)
-    for i in range(0,len(array)):
-        new_array_i = re.sub('[\.\,\/\\\&\=\:\;\"\(\)\[\]\{\}\?\!\$\+\*]','',array[i]) 
-        new_array_i = new_array_i.split()
-        for j in range(0,len(new_array_i)):
-            word = new_array_i[j].lower()
-            if word not in stops:
-                #word = porter_stemmer.PorterStemmer().stem(word, 0, len(word) - 1)
-                if len(list(word))>2:
-                    if list(word)[-2:]==['e','s'] or list(word)[-2:]==['e','d']:
-                        word = ''.join(list(word)[:-2])
-                if list(word)[-1]=='s' or list(word)[-1]=='e':
-                    word = ''.join(list(word)[:-1])
-                new_array_i[j] = word 
-            else:
-                new_array_i[j] = None 
-        new_array[i] = [x for x in new_array_i if x != None]
-        
-        for j in range(0,len(new_array[i])-1):
-            new_array[i].append(new_array[i][j]+' '+new_array[i][j+1])
-    return(new_array)
-    
-def get_word_freqs(word_list,min_freq,num_kw):
-    words = [item for sublist in word_list for item in sublist]
-    freqs = Counter(words)    
-    sorted_freqs = sorted([[x,freqs[x]/len(words)] for x in freqs if freqs[x]>min_freq],key=itemgetter(1),reverse=True)
-    if num_kw>len(sorted_freqs):
-        num_kw = len(sorted_freqs) 
-    return(sorted_freqs[:num_kw])
-    
-def get_bag_of_words(word_list,key_words):
-    hists = [[]]
-    for i in range(len(word_list)):
-        counts = Counter(word_list[i])
-        hist = [0]*len(key_words)
-        for word in counts:
-            if word in key_words:
-                hist[key_words.index(word)] = counts[word]
-        if i==0:
-            hists[0] = hist
-        else:
-            hists.append(hist)
-    return(hists)
-    
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-dim', default='pca', help='Method for dimension reduction')
-    parser.add_argument('-c', default='kmeans', help='Method for clustering')
-    parser.add_argument('-recommend', default='false', help='Paper ID to which related papers will be listed')
-    parser.add_argument('-nfeature', default=3000, help='number of features (key words)')
-    opts = parser.parse_args()
-    [ID, Title, EventType, PdfName, Abstract, Paper] = load_file_NIPS('./NIPS_databases/Papers.csv')
-    words = get_word_list(Abstract)
-    KW = get_word_freqs(words,1,opts.nfeature)
-    hists = get_bag_of_words(words,[x[0] for x in KW])
-    X = np.array(hists)
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument('-dim', default='pca', help='Method for dimension reduction')
+    #parser.add_argument('-c', default='kmeans', help='Method for clustering')
+    #parser.add_argument('-recommend', default='false', help='Paper ID to which related papers will be listed')
+    #parser.add_argument('-nfeature', default=3000, help='number of features (key words)')
+    #opts = parser.parse_args()
+    data = load_file('abstract_data.csv')
+    (text_tf,vectorizer) = get_text_feature(data['abstract'])
+    fit_lda(text_tf,vectorizer)
+    
+# ========== load data csv ==========
+def load_file(file_name):    
+    current_filepath = os.path.dirname(__file__)
+    data_filepath = os.path.join(current_filepath, '../DATA/'+file_name)
+    if file_name=='abstract_data.csv':
+        with open(data_filepath) as datafile:
+            data = pd.read_csv(datafile)
+        # ========== only keep topic field ==========
+        data = data[['topic', 'abstract','pres_title']]
+        # get the 1,2,3 hierachy of the topics
+        data['1'] = data.topic.str.extract('^\+\+(\w).*')
+        data['2'] = data.topic.str.extract('^\+\+(\w\.\d\d).*')
+        data['3'] = data.topic.str.extract('^\+\+(\w\.\d\d\.\w+).*')
+        data.sort('3')
+        # remove rows with nan topic
+        data = data[data['1'].apply(lambda x: x is not np.nan)]
+    elif file_name=='stopwords.txt':
+        with open(data_filepath) as datafile:
+            data = []
+            for word in datafile.readlines():
+                data.append(word)
+    return(data)
+
+# ========== get text feature ==========
+def get_text_feature(corpus):
+    # input is a list of strings
+    vectorizer = CountVectorizer(strip_accents='unicode',stop_words='english',min_df=1,max_df=0.95,max_features=n_features,tokenizer=tokenize)
+    text_tf = vectorizer.fit_transform(corpus)
+    return [text_tf, vectorizer]
+    
+def tokenize(text):
+    text = re.sub('[\.\,\/\\\&\=\:\;\"\(\)\[\]\{\}\?\!\$\*]','',text) 
+    stopwords = load_file('stopwords.txt')
+    tokens = []
+    for word in text.split():
+        if word[0].isupper() and word[-1].islower():
+            word = word.lower()
+        if word not in stopwords:
+            tokens.append(word)
+    return tokens
+                        
+            
+def fit_lda(tf,vectorizer):
+    lda = LatentDirichletAllocation(n_topics=n_topics, max_iter=5,learning_method='online', learning_offset=50.,random_state=0)
+    lda.fit(tf)
+    tf_feature_names = vectorizer.get_feature_names()
+    print_top_words(lda, tf_feature_names, n_top_words)
+
+def print_top_words(model, feature_names, n_top_words):
+    for topic_idx, topic in enumerate(model.components_):
+        print("Topic #%d:" % topic_idx)
+        print(" ".join([feature_names[i]
+                        for i in topic.argsort()[:-n_top_words - 1:-1]]))
+    return
+
+    
+def d_reduction(X):    
     if opts.dim is 'pca':
         from sklearn.decomposition import PCA
         X = PCA(n_components=3).fit_transform(X)
     elif opts.dim is 'tsne':
         from sklearn.manifold import TSNE
         X = TSNE(n_components=10, random_state=0).fit_transform(X) 
+    return X
     
+def cluster(X):
     if opts.c=='kmeans':
         n_clusters = 7
         labels = kmeans(X,n_clusters)
@@ -112,11 +116,6 @@ def main():
     
     plt.show()
     
-#    with open('results/labels.csv', 'w') as file_writer:
-#        writer = csv.writer(file_writer)
-#        writer.writerow(['ID', 'Title', 'PdfName', 'Abstract', 'Label_'+opts.dim+'_'+opts.c] )
-#        for i in range(0,len(ID)):
-#            writer.writerow([ID[i], Title[i], PdfName[i], Abstract[i], labels[i]] )   
             
             
 def kmeans(X,n_clusters):
