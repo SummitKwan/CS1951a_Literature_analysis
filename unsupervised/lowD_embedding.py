@@ -35,6 +35,7 @@ def main():
     data = data[data['1'].apply(lambda x: x is not np.nan)]
 
     # (data_fullname, topic) = replace_topic_fullname(data)
+    [text_tf, vectorizer] = get_text_feature(data['abstract'][0:100])
 
     return 'finish'
 
@@ -60,11 +61,8 @@ def replace_topic_fullname(data):
 def get_text_feature(corpus):
     # input is a list of strings
     vectorizer = CountVectorizer(strip_accents='unicode',stop_words='english',min_df=1)
-    vectorizer.fit_transform(corpus)
-
-
-
-
+    text_tf = vectorizer.fit_transform(corpus)
+    return [text_tf, vectorizer]
 
 
 if __name__ == '__main__':
