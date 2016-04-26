@@ -104,6 +104,8 @@ def embed_hierarchy(x, yy):
     [x1,y1] = group_mean_x(x, yy['1'])
     [x2,y2] = group_mean_x(x, yy['2'])
     [x3,y3] = group_mean_x(x, yy['3'])
+    x4 = x
+    y4 = np.array(yy['a'])
 
     # xh = x1
     # yh = y1
@@ -117,9 +119,13 @@ def embed_hierarchy(x, yy):
     # yh = np.concatenate((y1,y2))
     # h  = np.concatenate((np.ones(len(y1))*1, np.ones(len(y2))*2))
 
-    xh = np.concatenate((x1,x2,x3))
-    yh = np.concatenate((y1,y2,y3))
-    h  = np.concatenate((np.ones(len(y1))*1, np.ones(len(y2))*2, np.ones(len(y3))*3))
+    # xh = np.concatenate((x1,x2,x3))
+    # yh = np.concatenate((y1,y2,y3))
+    # h  = np.concatenate((np.ones(len(y1))*1, np.ones(len(y2))*2, np.ones(len(y3))*3))
+
+    xh = np.concatenate((x1,x2,x3,x4))
+    yh = np.concatenate((y1,y2,y3,y4))
+    h  = np.concatenate((np.ones(len(y1))*1, np.ones(len(y2))*2, np.ones(len(y3))*3, np.ones(len(y3))*4))
 
     # low-D embedding
     print('start embedding')
@@ -137,8 +143,7 @@ def embed_hierarchy(x, yy):
     plt.legend( list(y1), loc='upper left', bbox_to_anchor=(1, 1) )
     plt.scatter(xh_ld[:,0],xh_ld[:,1],s=300/h**3, c=ch, edgecolors='none' )
 
-
-    # return [xh, yh, h]
+    return [xh, yh, h]
 
 # ---------- color for pretty plot ----------
 def gen_distinct_color(n):
