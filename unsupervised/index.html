@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: auto;
+    position: relative;
+    width: 960px;
+}
+
+form {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+</style>
+
+<body>
+    <h4>What this is:</h4>
+    <p>
+        This interactive visulization demonstates the anatomy of the enormous domain of neuroscience research.</br>
+        Every circle represents a research topic:</br>
+        --size denotes the level of research topic: three levels from top (big) to bottom (small)</br>
+        --color shows the top-level cetegory of reseach topic
+    </p>
+    <h4>How this is computed:</h4>
+    <p>
+        --topic proximity: based on the similarity of word frequency (unigram) from the abstrct text, in high-dimensional space</br>
+        --2D illustration: learn a 2D manifold that preserves the local structure
+    </p>
+
+    <div id=topic_embedding></div>
+
+    <h4>Observaton:</h4>
+    <p>The results from this unsupervied learning does reflect the stucture of the filed: related research topics are close to each other</p>
+    <p>The SfN topic assignment mostly doest a great job in terms of groupping siminar researches together, which helps the audience to navigate the large conference efficiently.</p>
+    <p>However, a significant number of topics fall far away from its assigned parent topic, but they are in proximity to topics in other domains.  These topics should consider to be reassgined. e.g. "B.02.g. TRP channels", the yellow circle in the bottom surrounded by the blue circles</p>
+
+</body>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="topic_embedding.js"></script>
