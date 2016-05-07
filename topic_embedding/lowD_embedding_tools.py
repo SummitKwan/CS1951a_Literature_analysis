@@ -10,7 +10,7 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.decomposition import PCA, IncrementalPCA, KernelPCA, FastICA
 import sklearn.preprocessing
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.stats.mstats import zscore
 import matplotlib
 import matplotlib.pyplot as plt
@@ -95,6 +95,7 @@ def group_mean_x(x, y):
 # ---------- tSNE embedding ----------
 def embed(x):
     model = TSNE(n_components=2, random_state=0, perplexity=50.0, metric='correlation')
+    # model = TSNE(n_components=2, random_state=0, perplexity=50.0)
     # model = KernelPCA(n_components=2, kernel='rbf')
     # model = PCA(n_components=2)
     # model = FastICA(n_components=2)

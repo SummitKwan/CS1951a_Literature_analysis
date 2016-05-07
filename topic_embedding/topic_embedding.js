@@ -13,7 +13,7 @@ var color = d3.scale.category10();
 var svg = d3.select("#topic_embedding").append("svg")
 .attr("width", width)
 .attr("height", height)
-// .style('all','initial')
+.style('all','initial')
 .style('font-family','"Trebuchet MS", Helvetica, sans-serif')
 ;
 
@@ -21,11 +21,11 @@ var svg = d3.select("#topic_embedding").append("svg")
 svg.append('text')
 .text('Anatomy of SfN 2015 research topics')
 .attr("x",width/2)
-.attr("y",50)
+.attr("y",20)
 .style("font-size", "24px")
 .attr("text-anchor", "middle");
 
-var tooltip = d3.select("#topic_embedding")
+var tooltip = d3.select("body")
     .append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -36,6 +36,11 @@ var tooltip = d3.select("#topic_embedding")
     .style("border-radius", "10px")
     .style("stroke", "black")
     ;
+
+var static_tooltip = svg.append('text')
+.text('')
+.attr("x",0)
+.attr("y",50);
 
 d3.json("topic_embedding.json", function(error, data) {
     if (error) throw error;
@@ -80,9 +85,12 @@ d3.json("topic_embedding.json", function(error, data) {
         tooltip.transition()
             .duration(200)
             .style("opacity", .8)
-            .style("left", (d3.event.pageX+20) + "px")
-            .style("top", (d3.event.pageY - 20) + "px")
+            // .style("left", (x(d.x) +20) + "px")
+            .style("left", (d3.event.pageX +20) + "px")
+            .style("top",  (d3.event.pageY -20) + "px")
         tooltip.html( d.yh );
+        static_tooltip.text(d.yh)
+        .style("fill", d3.rgb(d.ch).darker(1));
         })
     .on("mouseout", function(d) {
         d3.select(this)
