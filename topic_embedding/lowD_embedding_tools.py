@@ -210,12 +210,12 @@ def print_top_words(model, feature_names, n_top_words):
         for i in topic.argsort()[:-n_top_words - 1:-1]]))
     return 0
 
-def get_neighbor(x_lda, q, n):
+def get_neighbor(x_all, q, n):
     # x: all abstract N*M
     # q: query abstract 1*M, or index
     # n: number of neighbors to return
     if type(q) is int:
-        dist = cdist (x_lda, x_lda[[q],:], 'euclidean')
+        dist = cdist (x_all, x_all[[q],:], 'cosine')
     else:
-        dist = cdist (x_lda, q, 'euclidean')
+        dist = cdist (x_all, q, 'cosine')
     return np.argsort(dist, axis=None)[0:n]

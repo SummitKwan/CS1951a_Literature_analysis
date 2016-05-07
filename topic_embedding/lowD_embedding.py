@@ -29,6 +29,10 @@ def main():
     print('lowD embedding')
     x = text_tf
     yy= data[['1','2','3']]
+
+    print('recommendation based on similarity')
+    x_d = np.asarray(x.todense())
+
     embed_results = embed_hierarchy(text_tf, data_full[['1','2','3']])
     plot_embed_result(embed_results)
     print('saving embedding results to json')
