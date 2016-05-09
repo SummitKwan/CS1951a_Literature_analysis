@@ -14,6 +14,7 @@ from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.stats.mstats import zscore
 import matplotlib
 import matplotlib.pyplot as plt
+import time
 
 
 # ========== load data csv ==========
@@ -145,6 +146,14 @@ def plot_embed_result(embed_results):
     plt.scatter(xh_ld_z[:,0],xh_ld_z[:,1],s=300/h**3, c=ch, edgecolors='none' )
     plt.axis('off')
 
+def plot_embed_all_abstract(x_l, topic):
+
+    topic_unq = list(set(np.array(topic)))
+    mycolor = gen_distinct_color(len(topic_unq))
+    y_to_c = dict(zip(topic_unq, mycolor))   # y to color dictionary, based on topic
+    c = [y_to_c[i] for i in topic]  # get color for every data point
+    plt.scatter(x_l[:,0],x_l[:,1], s=10, c=c, edgecolors='none')
+    plt.axis('off')
 
 def save_embed_results_for_D3(embed_results):
 
@@ -210,12 +219,12 @@ def print_top_words(model, feature_names, n_top_words):
         for i in topic.argsort()[:-n_top_words - 1:-1]]))
     return 0
 
-def get_neighbor(x_all, q, n):
+def get_neighbor(x_all, q, n=5, method_dist='cosine'):
     # x: all abstract N*M
     # q: query abstract 1*M, or index
     # n: number of neighbors to return
     if type(q) is int:
-        dist = cdist (x_all, x_all[[q],:], 'cosine')
+        dist = cdist (x_all, x_all[[q],:], method_dist)
     else:
-        dist = cdist (x_all, q, 'cosine')
+        dist = cdist (x_all, q, method_dist)
     return np.argsort(dist, axis=None)[0:n]

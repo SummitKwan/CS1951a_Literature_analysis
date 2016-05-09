@@ -25,22 +25,51 @@ def main():
     print('calculating text features')
     # (data_fullname, topic) = replace_topic_fullname(data)
     [text_tf, vectorizer] = get_text_feature(data['abstract'])
-
-    print('lowD embedding')
     x = text_tf
-    yy= data[['1','2','3']]
-
-    print('recommendation based on similarity')
     x_d = np.asarray(x.todense())
 
+    print('recommendation based on similarity')
+    data_simple = data[['pres_title','1','2','3']]
+    q=0
+    recmd = get_neighbor(x_d, q, 10)
+    print(data_simple.iloc[recmd])
+    print(np.array(data_simple.iloc[recmd]['pres_title']))
+
+    # low-D embedding of categories
+    print('lowD embedding of topics')
+    yy= data[['1','2','3']]
     embed_results = embed_hierarchy(text_tf, data_full[['1','2','3']])
     plot_embed_result(embed_results)
     print('saving embedding results to json')
     save_embed_results_for_D3(embed_results)
 
-    # [x_lda_out,lda] = fit_lda(x,vectorizer)
+    # low-D embedding of all abstracts: super slow, can take more than one hour!
+    if False:
+        print('lowD embedding of all abstracts')
+        t0=time.time()
+        x_all_l = embed(x_d[:,:])
+        if False:
+            np.savetxt('x_l_tsne.csv', delimiter=',', newline='\n')
+        print('time takes: '+ str((time.time()-t0)) +' s')
+        plot_embed_all_abstract(x_l, topic)  # plot
 
-    print('stop')
+    # plot embedding of all abstracts:
+    x_l = np.loadtxt('x_l_tsne.csv', delimiter=',')
+    plt.scatter(x_l[:,0],x_l[:,1])
+
+    # recoomendation with t-sne
+    data_simple = data[['pres_title','1','2','3']]
+    q=0
+    recmd = get_neighbor(x_l, q, 10)
+    print(data_simple.iloc[recmd])
+    print(np.array(data_simple.iloc[recmd]['pres_title']))
+
+    # compare native vs t-sne recommendation system: t-sne with euclidiean distance seems better
+    q=12540
+    print(data_simple.iloc[get_neighbor(x_l, q, n=10, method_dist='euclidean')])
+    print(data_simple.iloc[get_neighbor(x_d, q, n=10, method_dist='cosine')])
+    print(np.array(data_simple.iloc[get_neighbor(x_l, q, n=10, method_dist='euclidean')]['pres_title']))
+    print(np.array(data_simple.iloc[get_neighbor(x_d, q, n=10, method_dist='cosine')]['pres_title']))
 
     return 'finish'
 

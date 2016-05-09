@@ -25,7 +25,7 @@ svg.append('text')
 .style("font-size", "24px")
 .attr("text-anchor", "middle");
 
-var tooltip = d3.select("body")
+var tooltip = d3.select("#topic_embedding")
     .append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -36,6 +36,21 @@ var tooltip = d3.select("body")
     .style("border-radius", "10px")
     .style("stroke", "black")
     ;
+
+// var tooltip_html = svg.append('foreignObject')
+// .attr('x', 0)
+// .attr('y', 0)
+// .attr('width', 200)
+// .attr('height', 200)
+// .style("opacity", 1)
+// .html('<div>hahah</div>')
+// .style('font-size','12px')
+// .style("background", "lightsteelblue")
+// .style("border-radius", "10px")
+// .style("stroke", "black")
+// ;
+
+
 
 var static_tooltip = svg.append('text')
 .text('')
@@ -80,25 +95,33 @@ d3.json("topic_embedding.json", function(error, data) {
     .style("stroke-width", "2")
     .style("opacity", function(d){return Math.pow(0.8,d.h-1);})
     .on("mouseover", function(d) {
+        var cursor_in_svg = d3.mouse(svg.node());
+
         d3.select(this)
         .style('fill', function(d) { return d3.rgb(d.ch).darker(1); } );
-        tooltip.transition()
-            .duration(200)
-            .style("opacity", .8)
-            // .style("left", (x(d.x) +20) + "px")
-            .style("left", (d3.event.pageX +20) + "px")
-            .style("top",  (d3.event.pageY -20) + "px")
-        tooltip.html( d.yh );
+
+        tooltip_html
+        .style('opacity',0.8)
+        .html(d.yh)
+        ;
+
+        // tooltip.transition()
+        //     .duration(200)
+        //     .style("opacity", .8)
+        //     // .style("left", (x(d.x) +20) + "px")
+        //     .style("left", (cursor_in_svg[0] ) + "px")
+        //     .style("top",  (cursor_in_svg[1] ) + "px")
+        // tooltip.html( d.yh );
         static_tooltip.text(d.yh)
         .style("fill", d3.rgb(d.ch).darker(1));
         })
     .on("mouseout", function(d) {
         d3.select(this)
         .style('fill', function(d) { return d3.rgb(d.ch); } );
-        tooltip.html('');
-        tooltip.transition()
-            .duration(200)
-            .style("opacity", .0);
+        // tooltip.html('');
+        // tooltip.transition()
+        //     .duration(200)
+        //     .style("opacity", .0);
         });
     // .append("title")
     // .text(function(d) { return d.yh; })
